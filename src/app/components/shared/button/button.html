@@ -1,0 +1,11 @@
+<button
+  [type]="type"
+  [disabled]="disabled"
+  [attr.aria-label]="ariaLabel"
+  (click)="onClick()"
+  class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md text-sm transition disabled:cursor-not-allowed"
+  [class]="variantClasses[variant]"
+  [class.w-full]="fullWidth"
+>
+  <ng-content></ng-content>
+</button>

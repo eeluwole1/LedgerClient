@@ -1,0 +1,66 @@
+<app-card [title]="editMode ? 'Edit Transaction' : 'Add Transaction'" class="mx-auto block max-w-lg">
+  <form [formGroup]="transactionForm" (ngSubmit)="onSubmit()" class="space-y-5">
+    <div>
+      <label for="type" class="mb-1 block text-sm font-medium text-gray-700">Type</label>
+      <select
+        id="type"
+        formControlName="type"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        <option value="Expense">Expense</option>
+        <option value="Income">Income</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="category" class="mb-1 block text-sm font-medium text-gray-700">Category</label>
+      <select
+        id="category"
+        formControlName="category"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      >
+        <option value="" disabled>Select a category</option>
+        @for (category of availableCategories(); track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="amount" class="mb-1 block text-sm font-medium text-gray-700">Amount</label>
+      <div
+        class="flex items-center rounded-md border border-gray-300 px-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+      >
+        <span class="text-gray-500">$</span>
+        <input
+          id="amount"
+          type="number"
+          formControlName="amount"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+          class="w-full border-0 px-2 py-2 text-gray-900 focus:outline-none focus:ring-0"
+        />
+      </div>
+    </div>
+
+    <div>
+      <label for="createdAt" class="mb-1 block text-sm font-medium text-gray-700">Date</label>
+      <input
+        id="createdAt"
+        type="date"
+        formControlName="createdAt"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <a routerLink="/transactions" class="rounded-md px-4 py-2 text-gray-700 transition hover:bg-gray-100">
+        Cancel
+      </a>
+      <app-button type="submit" [disabled]="transactionForm.invalid">
+        {{ editMode ? 'Update Transaction' : 'Add Transaction' }}
+      </app-button>
+    </div>
+  </form>
+</app-card>

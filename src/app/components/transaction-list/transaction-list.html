@@ -1,0 +1,98 @@
+<div class="w-full">
+  <!-- Summary cards -->
+  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div class="flex h-full flex-col rounded-lg bg-green-600/75 p-6 text-white shadow">
+      <h5 class="text-sm font-medium uppercase tracking-wide">Total Income</h5>
+      <h3 class="mt-2 text-3xl font-bold">{{ totalIncome | currency }}</h3>
+    </div>
+
+    <div class="flex h-full flex-col rounded-lg bg-red-600/75 p-6 text-white shadow">
+      <h5 class="text-sm font-medium uppercase tracking-wide">Total Expenses</h5>
+      <h3 class="mt-2 text-3xl font-bold">{{ totalExpenses | currency }}</h3>
+    </div>
+
+    <div
+      class="flex h-full flex-col rounded-lg p-6 text-white shadow"
+      [ngClass]="netBalance >= 0 ? 'bg-green-600/75' : 'bg-red-600/75'"
+    >
+      <h5 class="text-sm font-medium uppercase tracking-wide">Net Balance</h5>
+      <h3 class="mt-2 text-3xl font-bold">{{ netBalance | currency }}</h3>
+    </div>
+  </div>
+
+  <!-- Transactions table -->
+  <h3 class="mb-4 text-xl font-semibold">Transactions</h3>
+
+  <div class="overflow-x-auto rounded-lg bg-white shadow">
+    <table class="w-full text-left align-middle text-gray-900">
+      <thead class="bg-gray-100 text-xs uppercase text-gray-700">
+        <tr>
+          <th class="w-[15%] px-4 py-3">Date</th>
+          <th class="w-[15%] px-4 py-3">Type</th>
+          <th class="w-[25%] px-4 py-3">Category</th>
+          <th class="w-[20%] px-4 py-3">Amount</th>
+          <th class="w-[15%] px-4 py-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (transaction of transactions(); track transaction.id) {
+          <tr class="border-b border-gray-200 hover:bg-gray-50">
+            <td class="whitespace-nowrap px-4 py-3">{{ transaction.createdAt | date: 'mediumDate' }}</td>
+            <td
+              class="px-4 py-3 capitalize"
+              [ngClass]="transaction.type === 'Income' ? 'text-green-600' : 'text-red-600'"
+            >
+              {{ transaction.type }}
+            </td>
+            <td class="px-4 py-3">{{ transaction.category }}</td>
+            <td class="px-4 py-3">{{ transaction.amount | currency }}</td>
+            <td class="px-4 py-3">
+              <app-button
+                variant="icon"
+                ariaLabel="Edit transaction"
+                (clicked)="editTransaction(transaction)"
+                class="mr-1"
+              >
+                <i class="bi bi-pencil"></i>
+              </app-button>
+              <app-button
+                variant="icon-danger"
+                ariaLabel="Delete transaction"
+                (clicked)="deleteTransaction(transaction)"
+              >
+                <i class="bi bi-trash"></i>
+              </app-button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="px-4 py-6 text-center text-gray-500">No transactions yet.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (totalPages() > 1) {
+      <div class="flex items-center justify-between border-t border-gray-200 px-4 py-3">
+        <p class="text-sm text-gray-600">Page {{ page() }} of {{ totalPages() }}</p>
+        <div class="flex gap-2">
+          <app-button variant="ghost" [disabled]="page() === 1" (clicked)="goToPage(page() - 1)">
+            Previous
+          </app-button>
+          <app-button variant="ghost" [disabled]="page() === totalPages()" (clicked)="goToPage(page() + 1)">
+            Next
+          </app-button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<app-confirm-dialog
+  [open]="confirmDialogOpen()"
+  title="Delete Transaction"
+  message="Are you sure you want to delete this transaction? This action cannot be undone."
+  confirmText="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+></app-confirm-dialog>

@@ -1,0 +1,54 @@
+<app-card title="Login" class="mx-auto mt-6 block max-w-md">
+  @if (errorMessage()) {
+    <div class="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
+    <div>
+      <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email</label>
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        [ngClass]="
+          hasError('email', 'required') || hasError('email', 'email') ? 'border-red-500' : 'border-gray-300'
+        "
+        class="w-full rounded-md border px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+      @if (hasError('email', 'required')) {
+        <p class="mt-1 text-sm text-red-600">Email is required.</p>
+      }
+      @if (hasError('email', 'email')) {
+        <p class="mt-1 text-sm text-red-600">Please enter a valid email address.</p>
+      }
+    </div>
+
+    <div>
+      <label for="password" class="mb-1 block text-sm font-medium text-gray-700">Password</label>
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        [ngClass]="
+          hasError('password', 'required') || hasError('password', 'minlength') ? 'border-red-500' : 'border-gray-300'
+        "
+        class="w-full rounded-md border px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+      @if (hasError('password', 'required')) {
+        <p class="mt-1 text-sm text-red-600">Password is required.</p>
+      }
+      @if (hasError('password', 'minlength')) {
+        <p class="mt-1 text-sm text-red-600">Password must be at least 6 characters long.</p>
+      }
+    </div>
+
+    <app-button type="submit" [disabled]="loginForm.invalid" [fullWidth]="true">Login</app-button>
+
+    <p class="text-center text-sm text-gray-600">
+      You do not have an account?
+      <a routerLink="/signup" class="text-blue-500 hover:underline">Sign up</a>
+    </p>
+  </form>
+</app-card>

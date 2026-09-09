@@ -15,10 +15,10 @@ export class Button {
   @Output() clicked = new EventEmitter<void>();
 
   readonly variantClasses: Record<ButtonVariant, string> = {
-    primary: 'px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-300',
-    outline: 'px-4 py-2 border border-white text-white hover:bg-white hover:text-blue-600',
-    icon: 'p-2 border border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-500',
-    'icon-danger': 'p-2 border border-gray-300 text-gray-600 hover:border-red-500 hover:text-red-500',
+    primary: 'px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300',
+    outline: 'px-4 py-2 border border-white text-white hover:bg-white hover:text-indigo-600',
+    icon: 'p-2 border border-gray-300 text-gray-600 hover:border-indigo-500 hover:text-indigo-500',
+    'icon-danger': 'p-2 border border-gray-300 text-gray-600 hover:border-rose-500 hover:text-rose-500',
     ghost: 'px-4 py-2 text-gray-700 hover:bg-gray-100',
   };
 

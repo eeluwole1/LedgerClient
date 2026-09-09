@@ -22,6 +22,8 @@ import { AuthService } from '../../services/auth';
 export class Signup {
   signupForm: FormGroup;
   errorMessage = signal<string | null>(null);
+  showPassword = signal(false);
+  showConfirmPassword = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -47,6 +49,14 @@ export class Signup {
   hasError(controlName: string, errorName: string): boolean {
     const control = this.signupForm.get(controlName);
     return !!(control && control.touched && control.hasError(errorName));
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update((v) => !v);
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword.update((v) => !v);
   }
 
   onSubmit(): void {

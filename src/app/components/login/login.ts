@@ -15,6 +15,7 @@ import { AuthService } from '../../services/auth';
 export class Login {
   loginForm: FormGroup;
   errorMessage = signal<string | null>(null);
+  showPassword = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -30,6 +31,10 @@ export class Login {
   hasError(controlName: string, errorName: string): boolean {
     const control = this.loginForm.get(controlName);
     return !!(control && control.touched && control.hasError(errorName));
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update((v) => !v);
   }
 
   onSubmit(): void {

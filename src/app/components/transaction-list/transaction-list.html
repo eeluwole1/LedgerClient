@@ -1,19 +1,19 @@
 <div class="w-full">
   <!-- Summary cards -->
   <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-    <div class="flex h-full flex-col rounded-lg bg-green-600/75 p-6 text-white shadow">
+    <div class="flex h-full flex-col rounded-lg bg-emerald-600/75 p-6 text-white shadow">
       <h5 class="text-sm font-medium uppercase tracking-wide">Total Income</h5>
       <h3 class="mt-2 text-3xl font-bold">{{ totalIncome | currency }}</h3>
     </div>
 
-    <div class="flex h-full flex-col rounded-lg bg-red-600/75 p-6 text-white shadow">
+    <div class="flex h-full flex-col rounded-lg bg-rose-600/75 p-6 text-white shadow">
       <h5 class="text-sm font-medium uppercase tracking-wide">Total Expenses</h5>
       <h3 class="mt-2 text-3xl font-bold">{{ totalExpenses | currency }}</h3>
     </div>
 
     <div
       class="flex h-full flex-col rounded-lg p-6 text-white shadow"
-      [ngClass]="netBalance >= 0 ? 'bg-green-600/75' : 'bg-red-600/75'"
+      [ngClass]="netBalance >= 0 ? 'bg-emerald-600/75' : 'bg-rose-600/75'"
     >
       <h5 class="text-sm font-medium uppercase tracking-wide">Net Balance</h5>
       <h3 class="mt-2 text-3xl font-bold">{{ netBalance | currency }}</h3>
@@ -40,7 +40,7 @@
             <td class="whitespace-nowrap px-4 py-3">{{ transaction.createdAt | date: 'mediumDate' }}</td>
             <td
               class="px-4 py-3 capitalize"
-              [ngClass]="transaction.type === 'Income' ? 'text-green-600' : 'text-red-600'"
+              [ngClass]="transaction.type === 'Income' ? 'text-emerald-600' : 'text-rose-600'"
             >
               {{ transaction.type }}
             </td>

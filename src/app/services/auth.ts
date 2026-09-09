@@ -19,7 +19,7 @@ export class AuthService {
   currentUser = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
-    if (this.getToken()) {
+    if (this.isAuthenticated()) {
       this.currentUserSubject.next('user');
     }
   }
@@ -43,18 +43,42 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(TOKEN_KEY);
+    this.clearToken();
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) {
+      return false;
+    }
+    if (this.isTokenExpired(token)) {
+      this.clearToken();
+      return false;
+    }
+    return true;
   }
 
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+  }
+
+  private clearToken(): void {
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) {
+        return false;
+      }
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      return true;
+    }
   }
 
   private storeToken(token: string, rememberMe: boolean): void {

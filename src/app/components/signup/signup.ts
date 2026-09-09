@@ -12,6 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Button } from '../shared/button/button';
 import { Card } from '../shared/card/card';
 import { AuthService } from '../../services/auth';
+import { ToastService } from '../../services/toast';
 
 interface PasswordStrength {
   label: string;
@@ -28,7 +29,6 @@ interface PasswordStrength {
 })
 export class Signup {
   signupForm: FormGroup;
-  errorMessage = signal<string | null>(null);
   showPassword = signal(false);
   showConfirmPassword = signal(false);
   loading = signal(false);
@@ -38,6 +38,7 @@ export class Signup {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private toastService: ToastService,
   ) {
     this.signupForm = this.fb.group(
       {
@@ -100,10 +101,13 @@ export class Signup {
     this.loading.set(true);
     const { email, password } = this.signupForm.value;
     this.authService.register({ email, password }).subscribe({
-      next: () => this.router.navigate(['/transactions']),
+      next: () => {
+        this.toastService.success('Account created! Welcome to LedgerApp.');
+        this.router.navigate(['/transactions']);
+      },
       error: (error) => {
         this.loading.set(false);
-        this.errorMessage.set(error.error?.message ?? 'An error occurred during signup. Please try again.');
+        this.toastService.error(error.error?.message ?? 'An error occurred during signup. Please try again.');
       },
     });
   }

@@ -5,6 +5,7 @@ import { Button } from '../shared/button/button';
 import { Card } from '../shared/card/card';
 import { Transaction } from '../../models/transaction';
 import { TransactionService } from '../../services/transaction';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-transaction-form',
@@ -29,6 +30,7 @@ export class TransactionForm implements OnInit {
     private transactionService: TransactionService,
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private toastService: ToastService,
   ) {
     this.transactionForm = this.fb.group({
       type: ['Expense', Validators.required],
@@ -107,17 +109,25 @@ export class TransactionForm implements OnInit {
 
     if (this.editMode && this.transactionId) {
       this.transactionService.update(this.transactionId, payload).subscribe({
-        next: () => this.router.navigate(['/transactions']),
+        next: () => {
+          this.toastService.success('Transaction updated.');
+          this.router.navigate(['/transactions']);
+        },
         error: (error) => {
           this.saving.set(false);
+          this.toastService.error('Failed to save transaction. Please try again.');
           console.log(error);
         },
       });
     } else {
       this.transactionService.create(payload).subscribe({
-        next: () => this.router.navigate(['/transactions']),
+        next: () => {
+          this.toastService.success('Transaction added.');
+          this.router.navigate(['/transactions']);
+        },
         error: (error) => {
           this.saving.set(false);
+          this.toastService.error('Failed to save transaction. Please try again.');
           console.log(error);
         },
       });

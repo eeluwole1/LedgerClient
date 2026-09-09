@@ -1,15 +1,16 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Button } from '../shared/button/button';
 import { ConfirmDialog } from '../shared/confirm-dialog/confirm-dialog';
 import { Transaction } from '../../models/transaction';
 import { TransactionSummary } from '../../models/transaction-summary';
 import { TransactionService } from '../../services/transaction';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-transaction-list',
-  imports: [DatePipe, CurrencyPipe, NgClass, Button, ConfirmDialog],
+  imports: [DatePipe, CurrencyPipe, NgClass, RouterLink, Button, ConfirmDialog],
   templateUrl: './transaction-list.html',
   styleUrl: './transaction-list.css',
 })
@@ -28,6 +29,7 @@ export class TransactionList implements OnInit {
   constructor(
     private transactionService: TransactionService,
     private router: Router,
+    private toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -60,10 +62,14 @@ export class TransactionList implements OnInit {
 
     this.transactionService.delete(transaction.id).subscribe({
       next: () => {
+        this.toastService.success('Transaction deleted.');
         this.loadTransactions();
         this.loadSummary();
       },
-      error: (error) => console.log(error),
+      error: (error) => {
+        this.toastService.error('Failed to delete transaction. Please try again.');
+        console.log(error);
+      },
     });
   }
 

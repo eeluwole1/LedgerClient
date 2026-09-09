@@ -10,12 +10,6 @@
   </div>
 
   <app-card title="Login" class="block">
-    @if (errorMessage()) {
-      <div class="mb-4 rounded-md border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-        {{ errorMessage() }}
-      </div>
-    }
-
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
       <div>
         <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email</label>
@@ -65,6 +59,20 @@
         @if (hasError('password', 'minlength')) {
           <p class="mt-1 text-sm text-rose-600">Password must be at least 6 characters long.</p>
         }
+      </div>
+
+      <div class="flex items-center justify-between text-sm">
+        <label class="flex cursor-pointer items-center gap-2 text-gray-700">
+          <input
+            type="checkbox"
+            formControlName="rememberMe"
+            class="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          Remember me
+        </label>
+        <button type="button" (click)="onForgotPassword()" class="cursor-pointer text-indigo-600 hover:underline">
+          Forgot password?
+        </button>
       </div>
 
       <app-button type="submit" [disabled]="loginForm.invalid" [loading]="loading()" [fullWidth]="true">

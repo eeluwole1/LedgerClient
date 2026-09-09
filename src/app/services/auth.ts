@@ -6,6 +6,8 @@ import { environment } from '../../environments/environment';
 import { AuthResponse } from '../models/auth-response';
 import { User } from '../models/user';
 
+const TOKEN_KEY = 'token';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -17,41 +19,51 @@ export class AuthService {
   currentUser = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
-    const token = localStorage.getItem('token');
-    if (token) {
+    if (this.getToken()) {
       this.currentUserSubject.next('user');
     }
   }
 
-  login(credentials: User): Observable<AuthResponse> {
+  login(credentials: User, rememberMe = true): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(this.apiUrl + "/Login", credentials).pipe(
       tap((response) => {
-        localStorage.setItem('token', response.token);
+        this.storeToken(response.token, rememberMe);
         this.currentUserSubject.next('user');
       })
     );
   }
 
-  register(credentials: User): Observable<AuthResponse> {
+  register(credentials: User, rememberMe = true): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(this.apiUrl + "/Register", credentials).pipe(
       tap((response) => {
-        localStorage.setItem('token', response.token);
+        this.storeToken(response.token, rememberMe);
         this.currentUserSubject.next('user');
       })
     );
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    return !!this.getToken();
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY);
+  }
+
+  private storeToken(token: string, rememberMe: boolean): void {
+    if (rememberMe) {
+      localStorage.setItem(TOKEN_KEY, token);
+      sessionStorage.removeItem(TOKEN_KEY);
+    } else {
+      sessionStorage.setItem(TOKEN_KEY, token);
+      localStorage.removeItem(TOKEN_KEY);
+    }
   }
 }

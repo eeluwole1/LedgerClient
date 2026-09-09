@@ -10,6 +10,7 @@ export class Button {
   @Input() type: 'button' | 'submit' = 'button';
   @Input() variant: ButtonVariant = 'primary';
   @Input() disabled = false;
+  @Input() loading = false;
   @Input() fullWidth = false;
   @Input() ariaLabel: string | null = null;
   @Output() clicked = new EventEmitter<void>();
@@ -23,7 +24,7 @@ export class Button {
   };
 
   onClick(): void {
-    if (!this.disabled) {
+    if (!this.disabled && !this.loading) {
       this.clicked.emit();
     }
   }

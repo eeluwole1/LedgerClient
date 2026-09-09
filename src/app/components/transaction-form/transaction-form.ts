@@ -22,6 +22,7 @@ export class TransactionForm implements OnInit {
 
   editMode = false;
   transactionId?: number;
+  saving = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -102,15 +103,23 @@ export class TransactionForm implements OnInit {
       updatedAt: new Date(),
     };
 
+    this.saving.set(true);
+
     if (this.editMode && this.transactionId) {
       this.transactionService.update(this.transactionId, payload).subscribe({
         next: () => this.router.navigate(['/transactions']),
-        error: (error) => console.log(error),
+        error: (error) => {
+          this.saving.set(false);
+          console.log(error);
+        },
       });
     } else {
       this.transactionService.create(payload).subscribe({
         next: () => this.router.navigate(['/transactions']),
-        error: (error) => console.log(error),
+        error: (error) => {
+          this.saving.set(false);
+          console.log(error);
+        },
       });
     }
   }

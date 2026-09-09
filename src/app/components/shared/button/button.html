@@ -1,11 +1,14 @@
 <button
   [type]="type"
-  [disabled]="disabled"
+  [disabled]="disabled || loading"
   [attr.aria-label]="ariaLabel"
   (click)="onClick()"
   class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-md text-sm transition disabled:cursor-not-allowed"
   [class]="variantClasses[variant]"
   [class.w-full]="fullWidth"
 >
-  <ng-content></ng-content>
+  @if (loading) {
+    <i class="bi bi-arrow-repeat animate-spin" aria-hidden="true"></i>
+  }
+  <span [class.hidden]="loading"><ng-content></ng-content></span>
 </button>

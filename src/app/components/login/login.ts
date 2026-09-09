@@ -16,6 +16,7 @@ export class Login {
   loginForm: FormGroup;
   errorMessage = signal<string | null>(null);
   showPassword = signal(false);
+  loading = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -42,10 +43,12 @@ export class Login {
       return;
     }
 
+    this.loading.set(true);
     const { email, password } = this.loginForm.value;
     this.authService.login({ email, password }).subscribe({
       next: () => this.router.navigate(['/transactions']),
       error: (error) => {
+        this.loading.set(false);
         this.errorMessage.set(error.error?.message ?? 'An error occurred during login. Please try again.');
       },
     });

@@ -4,6 +4,14 @@ The frontend for **Ledger**, a personal finance tracker. Users sign up, log in, 
 
 **Live demo:** https://gentle-grass-0df38ee10.3.azurestaticapps.net (talks to the deployed API — see `Ledger.API/README.md`)
 
+## User Story
+
+> **As a user, I want to log in and see my own income and expenses in one place — with running totals I can trust — so that I can understand my spending at a glance instead of digging through a spreadsheet.**
+
+**The 30-second interview version:** This is the Angular frontend for a personal finance tracker. A user registers, logs in, and lands on a dashboard showing three summary cards (Total Income, Total Expenses, Net Balance) plus a paginated table of every transaction, scoped entirely to their own account via a JWT issued by the API. They can add, edit, or delete a transaction, and the summary numbers stay accurate independent of which page of the table they're viewing, because they come from a separate aggregate endpoint rather than being computed client-side from whatever page happens to be loaded.
+
+The part worth highlighting: I found and fixed a bug where a logged-in-looking session wasn't actually a valid one. `AuthService.isAuthenticated()` only checked whether a JWT *existed* in `localStorage`, never whether it had expired — and "Remember me" defaults to checked at login, so a token from any past session persisted indefinitely. The route guard let the user straight past `/login` on every visit, but the token was actually dead, so every API call the dashboard made came back `401` and silently rendered as an empty, zeroed-out state — which looked like "the app is broken" rather than "you're not logged in." The fix decodes the JWT's `exp` claim client-side and treats an expired token as logged-out, clearing it automatically so the user lands back on a real login screen instead of a dead session that only looks alive.
+
 ## Tech stack
 
 - **Angular 21**, standalone components (no `NgModule`s)
@@ -55,7 +63,7 @@ Serves on `http://localhost:4200`. Requires the API running locally (see `Ledger
 1. `AuthService.login()` / `.register()` POST to the API and, on success, store the returned JWT and push a value into a `BehaviorSubject` (`currentUser`) that the rest of the app reacts to.
 2. **Remember me**: the login form's checkbox controls *where* that token is stored — checked (the default) writes it to `localStorage` so the session survives closing the browser; unchecked writes it to `sessionStorage` instead, so it's gone once the browser closes. `AuthService.getToken()` checks both locations, so the rest of the app doesn't need to know which one is in use.
 3. `authInterceptor` (registered via `provideHttpClient(withInterceptors([authInterceptor]))` in `app.config.ts`) reads that token on **every** outgoing HTTP request and attaches `Authorization: Bearer <token>` — no per-service-call boilerplate needed.
-4. `authGuard` (`CanActivateFn`) blocks navigation to `/transactions`, `/add`, and `/edit/:id` unless `AuthService.isAuthenticated()` is true, redirecting to `/login` otherwise. This is a **UX/routing convenience only** — the real access control is the API's `[Authorize]` + per-user filtering. A user could bypass this guard with dev tools and would still get nothing back from the API, because the guard doesn't grant any access the server wouldn't have refused anyway.
+4. `authGuard` (`CanActivateFn`) blocks navigation to `/transactions`, `/add`, and `/edit/:id` unless `AuthService.isAuthenticated()` is true, redirecting to `/login` otherwise. `isAuthenticated()` decodes the stored JWT's `exp` claim and returns `false` (clearing the stale token) if it's expired — a token merely *existing* in storage isn't enough, since with "Remember me" defaulting to checked, a token from any past visit would otherwise sit in `localStorage` forever and keep satisfying the guard long after it stopped being valid server-side. This guard is still a **UX/routing convenience only** — the real access control is the API's `[Authorize]` + per-user filtering. A user could bypass this guard with dev tools and would still get nothing back from the API, because the guard doesn't grant any access the server wouldn't have refused anyway.
 5. `header.html` shows Add Transaction/Logout vs. Login by subscribing to `authService.currentUser | async` — reactive, no page reload needed when you log in or out.
 
 "Forgot password?" is present on the login page but is UI-only for now (shows an informational toast) — there's no email/reset-token flow wired up yet.

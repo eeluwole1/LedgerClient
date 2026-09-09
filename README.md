@@ -2,6 +2,8 @@
 
 The frontend for **Ledger**, a personal finance tracker. Users sign up, log in, and track income/expense transactions with running totals — everything scoped to their own account. Built with Angular, styled with Tailwind CSS.
 
+**Live demo:** https://gentle-grass-0df38ee10.3.azurestaticapps.net (talks to the deployed API — see `Ledger.API/README.md`)
+
 ## Tech stack
 
 - **Angular 21**, standalone components (no `NgModule`s)
@@ -17,13 +19,14 @@ The frontend for **Ledger**, a personal finance tracker. Users sign up, log in, 
 app/
   components/
     header/, footer/            Layout
-    login/, signup/             Auth forms, with inline field validation
-    transaction-list/           Dashboard: summary cards, paginated table, edit/delete
+    login/, signup/             Auth forms — validation, password strength meter, remember me
+    transaction-list/           Dashboard: summary cards, paginated table, edit/delete, empty state
     transaction-form/           Shared Add/Edit form (same component, driven by route param)
     shared/
-      button/                   Reusable <app-button variant="primary|outline|icon|icon-danger|ghost">
+      button/                   Reusable <app-button variant="primary|outline|icon|icon-danger|ghost" [loading]>
       card/                     Reusable <app-card title="..."> (header + body)
       confirm-dialog/           Reusable confirmation modal (replaces browser confirm())
+      toast-container/          Global toast notifications, mounted once in app.html
   guards/
     auth-guard.ts                CanActivateFn — redirects to /login if no token
   interceptors/
@@ -31,6 +34,7 @@ app/
   services/
     auth.ts                       Login/register/logout, token storage, reactive auth state
     transaction.ts                Transaction CRUD + pagination + summary
+    toast.ts                      Global toast notification service (success/error/info)
   models/                        TypeScript interfaces matching the API's DTOs
 environments/
   environment.ts                 Dev config (apiUrl → localhost API)
@@ -48,30 +52,44 @@ Serves on `http://localhost:4200`. Requires the API running locally (see `Ledger
 
 ## Authentication, end to end
 
-1. `AuthService.login()` / `.register()` POST to the API and, on success, store the returned JWT in `localStorage` and push a value into a `BehaviorSubject` (`currentUser`) that the rest of the app reacts to.
-2. `authInterceptor` (registered via `provideHttpClient(withInterceptors([authInterceptor]))` in `app.config.ts`) reads that token on **every** outgoing HTTP request and attaches `Authorization: Bearer <token>` — no per-service-call boilerplate needed.
-3. `authGuard` (`CanActivateFn`) blocks navigation to `/transactions`, `/add`, and `/edit/:id` unless `AuthService.isAuthenticated()` is true, redirecting to `/login` otherwise. This is a **UX/routing convenience only** — the real access control is the API's `[Authorize]` + per-user filtering. A user could bypass this guard with dev tools and would still get nothing back from the API, because the guard doesn't grant any access the server wouldn't have refused anyway.
-4. `header.html` shows Add Transaction/Logout vs. Login by subscribing to `authService.currentUser | async` — reactive, no page reload needed when you log in or out.
+1. `AuthService.login()` / `.register()` POST to the API and, on success, store the returned JWT and push a value into a `BehaviorSubject` (`currentUser`) that the rest of the app reacts to.
+2. **Remember me**: the login form's checkbox controls *where* that token is stored — checked (the default) writes it to `localStorage` so the session survives closing the browser; unchecked writes it to `sessionStorage` instead, so it's gone once the browser closes. `AuthService.getToken()` checks both locations, so the rest of the app doesn't need to know which one is in use.
+3. `authInterceptor` (registered via `provideHttpClient(withInterceptors([authInterceptor]))` in `app.config.ts`) reads that token on **every** outgoing HTTP request and attaches `Authorization: Bearer <token>` — no per-service-call boilerplate needed.
+4. `authGuard` (`CanActivateFn`) blocks navigation to `/transactions`, `/add`, and `/edit/:id` unless `AuthService.isAuthenticated()` is true, redirecting to `/login` otherwise. This is a **UX/routing convenience only** — the real access control is the API's `[Authorize]` + per-user filtering. A user could bypass this guard with dev tools and would still get nothing back from the API, because the guard doesn't grant any access the server wouldn't have refused anyway.
+5. `header.html` shows Add Transaction/Logout vs. Login by subscribing to `authService.currentUser | async` — reactive, no page reload needed when you log in or out.
+
+"Forgot password?" is present on the login page but is UI-only for now (shows an informational toast) — there's no email/reset-token flow wired up yet.
 
 ## Zoneless change detection gotcha
 
 This app has no Zone.js — Angular only re-renders a component when something it explicitly tracks changes (a signal write, a template-bound event, or `AsyncPipe` receiving a new value from an Observable). **Setting a plain class field inside an async callback — an HTTP `.subscribe()`, a `setTimeout`, anything not driven directly by a template binding — will silently fail to re-render the view**, even though the field's value did change. This bit us more than once while building this app.
 
 Two safe patterns, both used throughout this codebase:
-- **Signals** for state written inside async callbacks (see `TransactionList.transactions`, `Signup.errorMessage`) — `signal.set(...)` inside a `.subscribe()` callback works because Angular's signal implementation itself notifies the renderer.
+- **Signals** for state written inside async callbacks (see `TransactionList.transactions`, `Signup.passwordStrength`) — `signal.set(...)` inside a `.subscribe()` callback works because Angular's signal implementation itself notifies the renderer.
 - **`AsyncPipe`** for state that's naturally an Observable (see `header.html`'s `authService.currentUser | async`) — `AsyncPipe` calls `markForCheck()` internally on every emission, so it's zoneless-safe without you doing anything extra.
 
 If you add a new component that fetches data or reacts to a service's async state, reach for one of these two — not a plain `field = value` assignment inside a `.subscribe()`.
 
 ## Reusable components
 
-- **`<app-button>`** — `variant` (`primary` | `outline` | `icon` | `icon-danger` | `ghost`), `type`, `disabled`, `fullWidth`, `ariaLabel`; content-projects its label/icon via `<ng-content>`.
-- **`<app-card title="...">`** — optional colored header + white body, used by every form page.
+- **`<app-button>`** — `variant` (`primary` | `outline` | `icon` | `icon-danger` | `ghost`), `type`, `disabled`, `loading`, `fullWidth`, `ariaLabel`; content-projects its label/icon via `<ng-content>`. When `loading` is true the button disables itself and swaps its label for a spinning icon — used on every submit action (login, signup, add/edit transaction) so there's visible feedback while a request is in flight.
+- **`<app-card title="...">`** — optional gradient header + white body, used by every form page.
 - **`<app-confirm-dialog>`** — `[open]`, `title`, `message`, `confirmText`/`cancelText`, `(confirmed)`/`(cancelled)` outputs. `TransactionList` drives it with a signal (`confirmDialogOpen`) rather than the browser's native, unstyleable `confirm()`.
+- **`<app-toast-container>`** — mounted once at the root (`app.html`), reads `ToastService.toasts()` and renders a stacked, auto-dismissing notification in the corner. Any component injects `ToastService` and calls `.success()` / `.error()` / `.info()` — this is what login, signup, and transaction save/delete use instead of inline error banners, and it survives route navigation since it lives at the root.
+
+## UX details worth knowing about
+
+- **Password strength meter** (signup only): a live bar under the password field scored on length (≥8), mixed case, digits, and special characters — weak/medium/strong, recomputed on every keystroke via a `valueChanges` subscription feeding a signal.
+- **Show/hide password toggle** on every password field (login, signup, confirm password) — an eye icon that flips the input's `type` between `password` and `text`.
+- **Empty state**: the transactions table shows an icon, a short message, and an "Add your first transaction" button instead of a bare "No transactions yet." string when the account has no data yet.
 
 ## Pagination & summary
 
 `TransactionService.getAll(page, pageSize)` returns one page of transactions (`{ items, totalCount, page, pageSize }`); `TransactionList` tracks `page` as a signal and re-fetches on Previous/Next. The three summary cards (Total Income/Expenses/Net Balance) are **not** computed from the currently-loaded page — they come from a separate `TransactionService.getSummary()` call that the API aggregates across the user's full dataset, so the numbers don't fluctuate as you page through the table.
+
+## Branch workflow
+
+`dev` is where new features get built and manually verified (`ng build` + a browser check) before anything ships. `master` is the branch Azure actually deploys — the GitHub Actions workflow (`.github/workflows/azure-static-web-apps-*.yml`) only triggers on pushes to `master`, so `dev` can be pushed and iterated on freely without touching the live site. Once a change on `dev` looks right, it's fast-forward merged into `master`.
 
 ## Deploying (Azure)
 
@@ -90,4 +108,4 @@ Then build with the production configuration (this is what wires `fileReplacemen
 ng build --configuration production
 ```
 
-Deploy the contents of `dist/Ledger.Client` to your static host (e.g. Azure Static Web Apps). Make sure the deployed URL is also added to the API's `AllowedOrigins` (see `Ledger.API/README.md`) — otherwise every request will fail CORS.
+Deploy the contents of `dist/Ledger.Client/browser` to your static host (e.g. Azure Static Web Apps — this project's GitHub Actions workflow does this automatically on every push to `master`). Make sure the deployed URL is also added to the API's `AllowedOrigins` (see `Ledger.API/README.md`) — otherwise every request will fail CORS.

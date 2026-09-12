@@ -4,8 +4,18 @@
       <stop offset="0" stop-color="#4f46e5"/>
       <stop offset="1" stop-color="#7c3aed"/>
     </linearGradient>
+    <linearGradient id="top" x1="19" y1="14" x2="44" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e4e9ff"/>
+    </linearGradient>
   </defs>
   <rect width="64" height="64" rx="16" fill="url(#g)"/>
-  <rect x="19" y="14" width="10" height="36" rx="2" fill="#ffffff"/>
-  <rect x="19" y="40" width="25" height="10" rx="2" fill="#ffffff"/>
+
+  <!-- extruded side faces (depth), drawn under the top face -->
+  <polygon points="29,14 34,19 34,45 29,40" fill="#6d5bd0"/>
+  <polygon points="44,40 49,45 49,55 44,50" fill="#6d5bd0"/>
+  <polygon points="44,50 49,55 24,55 19,50" fill="#5b4bc4"/>
+
+  <!-- top face -->
+  <polygon points="19,14 29,14 29,40 44,40 44,50 19,50" fill="url(#top)"/>
 </svg>

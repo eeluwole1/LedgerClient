@@ -117,3 +117,10 @@ ng build --configuration production
 ```
 
 Deploy the contents of `dist/Ledger.Client/browser` to your static host (e.g. Azure Static Web Apps — this project's GitHub Actions workflow does this automatically on every push to `master`). Make sure the deployed URL is also added to the API's `AllowedOrigins` (see `Ledger.API/README.md`) — otherwise every request will fail CORS.
+
+**Direct navigation to a client-side route returns a real 404**: Azure Static Web Apps serves this as static files, so a request straight to `/login`, `/transactions`, or `/edit/5` — typed directly, refreshed, or bookmarked — looks for an actual file at that path and 404s before Angular's router ever runs. `public/staticwebapp.config.json` fixes this with a `navigationFallback` rule that serves `index.html` for any unmatched route (excluding real static assets), letting the router take over. It's copied into the build output automatically since it lives under `public/` — verify with `ng build --configuration production` that it lands in `dist/Ledger.Client/browser/staticwebapp.config.json` if you ever restructure the project.
+
+## Known limitations
+
+- **No global 401 handling.** `authInterceptor` only attaches the outgoing token; there's no response interceptor watching for a `401` and forcing logout/redirect. If a token expires mid-session, the next API call just fails as a normal error in whatever component made it (typically surfaced as a toast), rather than automatically bouncing the user to `/login`. `authGuard` catches an expired token on the *next* navigation, but not mid-session.
+- **Test coverage is scaffold-only.** The `.spec.ts` files (`login.spec.ts`, `transaction-form.spec.ts`, etc.) are still Angular CLI's default `should create` boilerplate — no real behavioral tests exist yet for forms, guards, or interceptors.

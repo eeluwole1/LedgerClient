@@ -37,7 +37,9 @@
       <tbody>
         @for (transaction of transactions(); track transaction.id) {
           <tr class="border-b border-gray-200 hover:bg-gray-50">
-            <td class="whitespace-nowrap px-4 py-3">{{ transaction.createdAt | date: 'mediumDate' }}</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              {{ transaction.createdAt | date: 'mediumDate' : 'UTC' }}
+            </td>
             <td
               class="px-4 py-3 capitalize"
               [ngClass]="transaction.type === 'Income' ? 'text-emerald-600' : 'text-rose-600'"
@@ -98,7 +100,11 @@
           <app-button variant="ghost" [disabled]="page() === 1" (clicked)="goToPage(page() - 1)">
             Previous
           </app-button>
-          <app-button variant="ghost" [disabled]="page() === totalPages()" (clicked)="goToPage(page() + 1)">
+          <app-button
+            variant="ghost"
+            [disabled]="page() === totalPages()"
+            (clicked)="goToPage(page() + 1)"
+          >
             Next
           </app-button>
         </div>

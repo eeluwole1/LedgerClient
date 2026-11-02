@@ -16,8 +16,20 @@ import { ToastService } from '../../services/toast';
 export class TransactionForm implements OnInit {
   transactionForm: FormGroup;
 
-  incomeCategories = ['Salary', 'Freelance', 'Investment', 'Rental', 'Business', 'Gift', 'Other Income'];
-  expenseCategories = ['Food', 'Transportation', 'Entertainment'];
+  incomeCategories = ['Salary', 'Bonus', 'Freelance', 'Investment', 'Rental', 'Business', 'Refund', 'Gift', 'Other Income'];
+  expenseCategories = [
+    'Food',
+    'Housing',
+    'Utilities',
+    'Transportation',
+    'Health',
+    'Insurance',
+    'Education',
+    'Shopping',
+    'Subscriptions',
+    'Entertainment',
+    'Other Expense',
+  ];
 
   availableCategories = signal<string[]>([]);
 

@@ -124,3 +124,7 @@ Deploy the contents of `dist/Ledger.Client/browser` to your static host (e.g. Az
 
 - **No global 401 handling.** `authInterceptor` only attaches the outgoing token; there's no response interceptor watching for a `401` and forcing logout/redirect. If a token expires mid-session, the next API call just fails as a normal error in whatever component made it (typically surfaced as a toast), rather than automatically bouncing the user to `/login`. `authGuard` catches an expired token on the *next* navigation, but not mid-session.
 - **Test coverage is scaffold-only.** The `.spec.ts` files (`login.spec.ts`, `transaction-form.spec.ts`, etc.) are still Angular CLI's default `should create` boilerplate — no real behavioral tests exist yet for forms, guards, or interceptors.
+
+## Roadmap
+
+Planned work (per-category budgets, progress view) is tracked in the "Roadmap" section of `Ledger.API/README.md`. Phase 1, the month filter, is built: a `<input type="month">` above the summary cards drives both `getAll` and `getSummary` (via optional `year`/`month` params), resets to page 1 on change, and "Show all time" clears it. The default view is still all time.

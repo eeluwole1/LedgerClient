@@ -15,13 +15,20 @@ export class TransactionService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(page: number = 1, pageSize: number = 10): Observable<PagedResult<Transaction>> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getAll(page: number = 1, pageSize: number = 10, year?: number, month?: number): Observable<PagedResult<Transaction>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (year && month) {
+      params = params.set('year', year).set('month', month);
+    }
     return this.http.get<PagedResult<Transaction>>(this.apiUrl + '/All', { params });
   }
 
-  getSummary(): Observable<TransactionSummary> {
-    return this.http.get<TransactionSummary>(this.apiUrl + '/Summary');
+  getSummary(year?: number, month?: number): Observable<TransactionSummary> {
+    let params = new HttpParams();
+    if (year && month) {
+      params = params.set('year', year).set('month', month);
+    }
+    return this.http.get<TransactionSummary>(this.apiUrl + '/Summary', { params });
   }
 
   getById(id: number) : Observable<Transaction> {

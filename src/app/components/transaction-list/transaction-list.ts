@@ -18,6 +18,9 @@ export class TransactionList implements OnInit {
   transactions = signal<Transaction[]>([]);
   summary = signal<TransactionSummary>({ totalIncome: 0, totalExpenses: 0, netBalance: 0 });
 
+  // 'YYYY-MM' from <input type="month">; empty string means all time
+  selectedMonth = signal('');
+
   page = signal(1);
   pageSize = 10;
   totalCount = signal(0);
@@ -79,16 +82,34 @@ export class TransactionList implements OnInit {
   }
 
   loadTransactions(): void {
-    this.transactionService.getAll(this.page(), this.pageSize).subscribe((result) => {
+    const { year, month } = this.monthParts();
+    this.transactionService.getAll(this.page(), this.pageSize, year, month).subscribe((result) => {
       this.transactions.set(result.items);
       this.totalCount.set(result.totalCount);
     });
   }
 
   loadSummary(): void {
-    this.transactionService.getSummary().subscribe((summary) => {
+    const { year, month } = this.monthParts();
+    this.transactionService.getSummary(year, month).subscribe((summary) => {
       this.summary.set(summary);
     });
+  }
+
+  onMonthChange(value: string): void {
+    this.selectedMonth.set(value);
+    this.page.set(1);
+    this.loadTransactions();
+    this.loadSummary();
+  }
+
+  private monthParts(): { year?: number; month?: number } {
+    const value = this.selectedMonth();
+    if (!value) {
+      return {};
+    }
+    const [year, month] = value.split('-').map(Number);
+    return { year, month };
   }
 
   goToPage(page: number): void {

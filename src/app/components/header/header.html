@@ -11,6 +11,14 @@
     <div class="ml-auto flex items-center">
       @if (authService.currentUser | async) {
         <a
+          routerLink="/budgets"
+          class="mr-2 inline-flex items-center gap-1 rounded-md border border-white px-4 py-2 text-sm transition hover:bg-white hover:text-indigo-600"
+        >
+          <i class="bi bi-piggy-bank"></i>
+          Budgets
+        </a>
+
+        <a
           routerLink="/add"
           class="mr-2 inline-flex items-center gap-1 rounded-md border border-white px-4 py-2 text-sm transition hover:bg-white hover:text-indigo-600"
         >

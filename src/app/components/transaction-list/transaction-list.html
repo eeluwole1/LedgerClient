@@ -43,6 +43,48 @@
     </div>
   </div>
 
+  <!-- Budget progress -->
+  <div class="mb-6 rounded-lg bg-white p-5 shadow">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="text-xl font-semibold">Budgets <span class="text-base font-normal text-gray-500">· {{ progressLabel() }}</span></h3>
+      <a routerLink="/budgets" class="text-sm text-indigo-600 hover:underline">Manage budgets</a>
+    </div>
+
+    @for (progress of budgetProgress(); track progress.budgetId) {
+      <div class="mb-3 last:mb-0">
+        <div class="mb-1 flex items-baseline justify-between text-sm">
+          <span class="font-medium text-gray-800">{{ progress.category }}</span>
+          <span class="text-gray-600">
+            {{ progress.spent | currency }} of {{ progress.monthlyLimit | currency }}
+            @if (progress.remaining < 0) {
+              <span class="font-medium text-rose-600">· {{ -progress.remaining | currency }} over</span>
+            } @else {
+              <span>· {{ progress.remaining | currency }} left</span>
+            }
+          </span>
+        </div>
+        <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          <div
+            class="h-2 rounded-full"
+            [ngClass]="barColor(progress)"
+            [style.width.%]="progress.percentUsed > 100 ? 100 : progress.percentUsed"
+            role="progressbar"
+            [attr.aria-valuenow]="progress.percentUsed"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="progress.category + ' budget used'"
+          ></div>
+        </div>
+      </div>
+    } @empty {
+      <p class="text-sm text-gray-500">
+        No budgets yet.
+        <a routerLink="/budgets" class="text-indigo-600 hover:underline">Set one</a>
+        to see how you're tracking against it.
+      </p>
+    }
+  </div>
+
   <!-- Transactions table -->
   <h3 class="mb-4 text-xl font-semibold">Transactions</h3>
 

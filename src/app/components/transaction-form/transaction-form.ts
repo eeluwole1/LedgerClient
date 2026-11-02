@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Button } from '../shared/button/button';
 import { Card } from '../shared/card/card';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../models/categories';
 import { Transaction } from '../../models/transaction';
 import { TransactionService } from '../../services/transaction';
 import { ToastService } from '../../services/toast';
@@ -16,20 +17,8 @@ import { ToastService } from '../../services/toast';
 export class TransactionForm implements OnInit {
   transactionForm: FormGroup;
 
-  incomeCategories = ['Salary', 'Bonus', 'Freelance', 'Investment', 'Rental', 'Business', 'Refund', 'Gift', 'Other Income'];
-  expenseCategories = [
-    'Food',
-    'Housing',
-    'Utilities',
-    'Transportation',
-    'Health',
-    'Insurance',
-    'Education',
-    'Shopping',
-    'Subscriptions',
-    'Entertainment',
-    'Other Expense',
-  ];
+  incomeCategories = INCOME_CATEGORIES;
+  expenseCategories = EXPENSE_CATEGORIES;
 
   availableCategories = signal<string[]>([]);
 

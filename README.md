@@ -30,6 +30,7 @@ app/
     login/, signup/             Auth forms — validation, password strength meter, remember me
     transaction-list/           Dashboard: summary cards, paginated table, edit/delete, empty state
     transaction-form/           Shared Add/Edit form (same component, driven by route param)
+    budgets/                    Per-category monthly limits: add, edit the limit, delete
     shared/
       button/                   Reusable <app-button variant="primary|outline|icon|icon-danger|ghost" [loading]>
       card/                     Reusable <app-card title="..."> (header + body)
@@ -41,9 +42,11 @@ app/
     auth-interceptor.ts          Attaches Authorization: Bearer <token> to every request
   services/
     auth.ts                       Login/register/logout, token storage, reactive auth state
-    transaction.ts                Transaction CRUD + pagination + summary
+    transaction.ts                Transaction CRUD + pagination + summary (optional year/month filter)
+    budget.ts                     Budget CRUD + monthly spent-vs-limit progress
     toast.ts                      Global toast notification service (success/error/info)
-  models/                        TypeScript interfaces matching the API's DTOs
+  models/                        TypeScript interfaces matching the API's DTOs, plus categories.ts —
+                                 the income/expense category lists shared by the transaction form and budgets
 environments/
   environment.ts                 Dev config (apiUrl → localhost API)
   environment.prod.ts            Prod config — update apiUrl before deploying (see below)
@@ -127,4 +130,10 @@ Deploy the contents of `dist/Ledger.Client/browser` to your static host (e.g. Az
 
 ## Roadmap
 
-Planned work (per-category budgets, progress view) is tracked in the "Roadmap" section of `Ledger.API/README.md`. Phase 1, the month filter, is built: a `<input type="month">` above the summary cards drives both `getAll` and `getSummary` (via optional `year`/`month` params), resets to page 1 on change, and "Show all time" clears it. The default view is still all time.
+The plan and status live in the "Roadmap" section of `Ledger.API/README.md`. What the client has so far:
+
+- **Month filter:** an `<input type="month">` above the summary cards drives both `getAll` and `getSummary` (via optional `year`/`month` params), resets to page 1 on change, and "Show all time" clears it. The default view is still all time.
+- **Budgets page (`/budgets`, behind `authGuard`):** pick an expense category and a monthly limit; categories that already have a budget disappear from the picker, and a `409` from the API is shown as a toast. Limits can be edited inline and deleted (with the shared confirm dialog).
+- **Budget progress on the dashboard:** one bar per budget showing spent vs. limit for the selected month (the current month when "all time" is selected), green → amber at 80% → red at 100%, with "$X left" or "$X over". If the progress call fails the rest of the dashboard still renders.
+
+The progress numbers come from the API's `Budgets/Progress` endpoint — nothing is calculated in the browser, same as the summary cards.

@@ -1,0 +1,106 @@
+<app-card title="Monthly Budgets" class="mx-auto block max-w-2xl">
+  <p class="mb-5 text-sm text-gray-600">
+    Set a monthly limit for an expense category. The dashboard shows how much of each limit you've used.
+  </p>
+
+  <form [formGroup]="budgetForm" (ngSubmit)="add()" class="mb-6 flex flex-wrap items-end gap-3">
+    <div class="min-w-40 flex-1">
+      <label for="budgetCategory" class="mb-1 block text-sm font-medium text-gray-700">Category</label>
+      <select
+        id="budgetCategory"
+        formControlName="category"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      >
+        <option value="" disabled>Select a category</option>
+        @for (category of availableCategories(); track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="w-40">
+      <label for="budgetLimit" class="mb-1 block text-sm font-medium text-gray-700">Monthly limit</label>
+      <div
+        class="flex items-center rounded-md border border-gray-300 px-3 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+      >
+        <span class="text-gray-500">$</span>
+        <input
+          id="budgetLimit"
+          type="number"
+          formControlName="monthlyLimit"
+          step="0.01"
+          min="0.01"
+          placeholder="0.00"
+          class="w-full border-0 px-2 py-2 text-gray-900 focus:outline-none focus:ring-0"
+        />
+      </div>
+    </div>
+
+    <app-button type="submit" [disabled]="budgetForm.invalid" [loading]="saving()">Add budget</app-button>
+  </form>
+
+  <div class="overflow-x-auto rounded-lg border border-gray-200">
+    <table class="w-full text-left align-middle text-gray-900">
+      <thead class="bg-gray-100 text-xs uppercase text-gray-700">
+        <tr>
+          <th class="px-4 py-3">Category</th>
+          <th class="px-4 py-3">Monthly limit</th>
+          <th class="px-4 py-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (budget of budgets(); track budget.id) {
+          <tr class="border-b border-gray-200 last:border-b-0">
+            <td class="px-4 py-3">{{ budget.category }}</td>
+            <td class="px-4 py-3">
+              @if (editingId() === budget.id) {
+                <input
+                  type="number"
+                  [formControl]="editLimit"
+                  step="0.01"
+                  min="0.01"
+                  aria-label="New monthly limit"
+                  class="w-28 rounded-md border border-gray-300 px-2 py-1 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              } @else {
+                {{ budget.monthlyLimit | currency }}
+              }
+            </td>
+            <td class="px-4 py-3">
+              @if (editingId() === budget.id) {
+                <app-button variant="ghost" [disabled]="editLimit.invalid" (clicked)="saveEdit(budget)">Save</app-button>
+                <app-button variant="ghost" (clicked)="cancelEdit()">Cancel</app-button>
+              } @else {
+                <app-button variant="icon" ariaLabel="Edit budget" (clicked)="startEdit(budget)" class="mr-1">
+                  <i class="bi bi-pencil"></i>
+                </app-button>
+                <app-button variant="icon-danger" ariaLabel="Delete budget" (clicked)="remove(budget)">
+                  <i class="bi bi-trash"></i>
+                </app-button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="px-4 py-8 text-center text-sm text-gray-500">
+              No budgets yet. Pick a category above to set your first one.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pt-4">
+    <a routerLink="/transactions" class="text-sm text-indigo-600 hover:underline">Back to dashboard</a>
+  </div>
+</app-card>
+
+<app-confirm-dialog
+  [open]="confirmDialogOpen()"
+  title="Delete Budget"
+  message="Delete this budget? Your transactions are not affected."
+  confirmText="Delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+></app-confirm-dialog>

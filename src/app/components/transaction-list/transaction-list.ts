@@ -3,8 +3,10 @@ import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Button } from '../shared/button/button';
 import { ConfirmDialog } from '../shared/confirm-dialog/confirm-dialog';
+import { BudgetProgress } from '../../models/budget-progress';
 import { Transaction } from '../../models/transaction';
 import { TransactionSummary } from '../../models/transaction-summary';
+import { BudgetService } from '../../services/budget';
 import { TransactionService } from '../../services/transaction';
 import { ToastService } from '../../services/toast';
 
@@ -21,6 +23,17 @@ export class TransactionList implements OnInit {
   // 'YYYY-MM' from <input type="month">; empty string means all time
   selectedMonth = signal('');
 
+  // Budgets are monthly, so with "all time" selected the progress shows the current month.
+  budgetProgress = signal<BudgetProgress[]>([]);
+  progressLabel = computed(() => {
+    const value = this.selectedMonth();
+    if (!value) {
+      return 'this month';
+    }
+    const [year, month] = value.split('-').map(Number);
+    return new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  });
+
   page = signal(1);
   pageSize = 10;
   totalCount = signal(0);
@@ -31,6 +44,7 @@ export class TransactionList implements OnInit {
 
   constructor(
     private transactionService: TransactionService,
+    private budgetService: BudgetService,
     private router: Router,
     private toastService: ToastService,
   ) {}
@@ -38,6 +52,7 @@ export class TransactionList implements OnInit {
   ngOnInit(): void {
     this.loadTransactions();
     this.loadSummary();
+    this.loadProgress();
   }
 
   editTransaction(transaction: Transaction): void {
@@ -68,6 +83,7 @@ export class TransactionList implements OnInit {
         this.toastService.success('Transaction deleted.');
         this.loadTransactions();
         this.loadSummary();
+        this.loadProgress();
       },
       error: (error) => {
         this.toastService.error('Failed to delete transaction. Please try again.');
@@ -96,11 +112,28 @@ export class TransactionList implements OnInit {
     });
   }
 
+  loadProgress(): void {
+    const { year, month } = this.monthParts();
+    this.budgetService.getProgress(year, month).subscribe({
+      next: (progress) => this.budgetProgress.set(progress),
+      // Budgets are secondary to the dashboard: if they fail to load, keep the rest working.
+      error: () => this.budgetProgress.set([]),
+    });
+  }
+
+  barColor(progress: BudgetProgress): string {
+    if (progress.percentUsed >= 100) {
+      return 'bg-rose-500';
+    }
+    return progress.percentUsed >= 80 ? 'bg-amber-500' : 'bg-emerald-500';
+  }
+
   onMonthChange(value: string): void {
     this.selectedMonth.set(value);
     this.page.set(1);
     this.loadTransactions();
     this.loadSummary();
+    this.loadProgress();
   }
 
   private monthParts(): { year?: number; month?: number } {

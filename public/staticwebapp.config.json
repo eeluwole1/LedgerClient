@@ -1,6 +1,16 @@
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "*.{css,js,ico,svg,png,jpg,jpeg,gif,webp,woff,woff2,ttf,map}"]
+    "exclude": [
+      "/assets/*",
+      "*.{css,js,ico,svg,png,jpg,jpeg,gif,webp,woff,woff2,ttf,map}"
+    ]
+  },
+  "globalHeaders": {
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'self' https://ledgerapp-demo-bgaqbpadbzfjhegh.canadacentral-01.azurewebsites.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
   }
 }

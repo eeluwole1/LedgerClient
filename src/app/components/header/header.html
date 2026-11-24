@@ -2,7 +2,7 @@
   <div class="flex w-full items-center px-4 py-3">
     <!-- App Name -->
     <div class="flex items-center">
-      <a routerLink="/" class="mr-6 flex items-center gap-2 text-xl font-bold">
+      <a routerLink="/" class="mr-3 flex items-center gap-2 text-xl font-bold sm:mr-6">
         LedgerApp
       </a>
     </div>
@@ -10,25 +10,30 @@
     <!-- Actions -->
     <div class="ml-auto flex items-center">
       @if (authService.currentUser | async) {
+        <!-- Below the sm breakpoint only the icons show, so three buttons fit next to the logo. -->
         <a
           routerLink="/budgets"
-          class="mr-2 inline-flex items-center gap-1 rounded-md border border-white px-4 py-2 text-sm transition hover:bg-white hover:text-indigo-600"
+          aria-label="Budgets"
+          title="Budgets"
+          class="mr-2 inline-flex items-center gap-1 rounded-md border border-white px-3 py-2 text-sm whitespace-nowrap transition hover:bg-white hover:text-indigo-600 sm:px-4"
         >
-          <i class="bi bi-piggy-bank"></i>
-          Budgets
+          <i class="bi bi-piggy-bank" aria-hidden="true"></i>
+          <span class="hidden sm:inline">Budgets</span>
         </a>
 
         <a
           routerLink="/add"
-          class="mr-2 inline-flex items-center gap-1 rounded-md border border-white px-4 py-2 text-sm transition hover:bg-white hover:text-indigo-600"
+          aria-label="Add Transaction"
+          title="Add Transaction"
+          class="mr-2 inline-flex items-center gap-1 rounded-md border border-white px-3 py-2 text-sm whitespace-nowrap transition hover:bg-white hover:text-indigo-600 sm:px-4"
         >
-          <i class="bi bi-plus-circle"></i>
-          Add Transaction
+          <i class="bi bi-plus-circle" aria-hidden="true"></i>
+          <span class="hidden sm:inline">Add Transaction</span>
         </a>
 
-        <app-button variant="outline" (clicked)="authService.logout()">
-          <i class="bi bi-box-arrow-right"></i>
-          Logout
+        <app-button variant="outline" ariaLabel="Logout" title="Logout" (clicked)="authService.logout()">
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          <span class="hidden sm:inline">Logout</span>
         </app-button>
       } @else {
         <a

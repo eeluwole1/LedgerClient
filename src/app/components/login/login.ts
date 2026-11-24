@@ -40,10 +40,6 @@ export class Login {
     this.showPassword.update((v) => !v);
   }
 
-  onForgotPassword(): void {
-    this.toastService.info("Password reset isn't available yet. Contact support if you're locked out.");
-  }
-
   onSubmit(): void {
     if (this.loginForm.invalid) {
       return;

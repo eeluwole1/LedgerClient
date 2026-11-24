@@ -73,9 +73,7 @@
           />
           Remember me
         </label>
-        <button type="button" (click)="onForgotPassword()" class="cursor-pointer text-indigo-600 hover:underline">
-          Forgot password?
-        </button>
+        <a routerLink="/forgot-password" class="text-indigo-600 hover:underline">Forgot password?</a>
       </div>
 
       <app-button type="submit" [disabled]="loginForm.invalid" [loading]="loading()" [fullWidth]="true">

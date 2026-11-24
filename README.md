@@ -28,6 +28,8 @@ app/
   components/
     header/, footer/            Layout
     login/, signup/             Auth forms — validation, password strength meter, remember me
+    forgot-password/            Asks for a reset link; shows the same confirmation whether or not the email has an account
+    reset-password/             Reads the token from the emailed link and sets a new password
     transaction-list/           Dashboard: summary cards, paginated table, edit/delete, empty state
     transaction-form/           Shared Add/Edit form (same component, driven by route param)
     budgets/                    Per-category monthly limits: add, edit the limit, delete
@@ -41,12 +43,15 @@ app/
   interceptors/
     auth-interceptor.ts          Attaches Authorization: Bearer <token> to every request
   services/
-    auth.ts                       Login/register/logout, token storage, reactive auth state
+    auth.ts                       Login/register/logout, forgot/reset password calls, token storage, reactive auth state
     transaction.ts                Transaction CRUD + pagination + summary (optional year/month filter)
     budget.ts                     Budget CRUD + monthly spent-vs-limit progress
     toast.ts                      Global toast notification service (success/error/info)
   models/                        TypeScript interfaces matching the API's DTOs, plus categories.ts —
                                  the income/expense category lists shared by the transaction form and budgets
+  utils/
+    password-strength.ts         Weak/medium/strong scoring, shared by signup and reset-password
+    validators.ts                trimmedEmail: validates an email ignoring surrounding spaces (pasted/autofilled emails)
 environments/
   environment.ts                 Dev config (apiUrl → localhost API)
   environment.prod.ts            Prod config — update apiUrl before deploying (see below)
@@ -69,7 +74,16 @@ Serves on `http://localhost:4200`. Requires the API running locally (see `Ledger
 4. `authGuard` (`CanActivateFn`) blocks navigation to `/transactions`, `/add`, and `/edit/:id` unless `AuthService.isAuthenticated()` is true, redirecting to `/login` otherwise. `isAuthenticated()` decodes the stored JWT's `exp` claim and returns `false` (clearing the stale token) if it's expired — a token merely *existing* in storage isn't enough, since with "Remember me" defaulting to checked, a token from any past visit would otherwise sit in `localStorage` forever and keep satisfying the guard long after it stopped being valid server-side. This guard is still a **UX/routing convenience only** — the real access control is the API's `[Authorize]` + per-user filtering. A user could bypass this guard with dev tools and would still get nothing back from the API, because the guard doesn't grant any access the server wouldn't have refused anyway.
 5. `header.html` shows Add Transaction/Logout vs. Login by subscribing to `authService.currentUser | async` — reactive, no page reload needed when you log in or out.
 
-"Forgot password?" is present on the login page but is UI-only for now (shows an informational toast) — there's no email/reset-token flow wired up yet.
+### Forgot password
+
+"Forgot password?" on the login page links to `/forgot-password`; both it and `/reset-password` are public routes (no `authGuard`).
+
+1. **`/forgot-password`** takes an email and calls `AuthService.forgotPassword()`. On success it shows "If *that address* has an account, a reset link is on its way", the same whether or not the account exists, because the API answers identically. A `429` (rate limit) is shown as a toast. The email is validated with `trimmedEmail`, so one pasted with a stray space is accepted and sent trimmed; the stock `Validators.email` rejects it, which left the button disabled with no explanation (a unit test caught this).
+2. The emailed link looks like `/reset-password#token=…`. The token is in the **URL fragment**, which browsers never send to a server or in a `Referer` header. **`/reset-password`** reads it from `ActivatedRoute.snapshot.fragment`, then immediately replaces the URL with the fragment removed, so it doesn't linger in the address bar or history.
+3. The page asks for a new password (8–128 characters, matching the API, with the strength meter and a confirmation field) and calls `AuthService.resetPassword()`. On success it shows a toast and goes to `/login`; the user signs in with the new password (a reset doesn't log anyone in).
+4. If the page is opened with no token it explains that the emailed link is needed. If the API answers `400` (link used, expired or unknown) it shows "invalid or expired" with a button to request a new one. Other errors are toasts and the form stays.
+
+The API does the real work: it stores only a hash of the token, expires it after an hour, and makes it single use (see "Password reset" in `Ledger.API/README.md`). The client never sees whether an account exists.
 
 ## Zoneless change detection gotcha
 
@@ -123,9 +137,12 @@ Deploy the contents of `dist/Ledger.Client/browser` to your static host (e.g. Az
 
 **Direct navigation to a client-side route returns a real 404**: Azure Static Web Apps serves this as static files, so a request straight to `/login`, `/transactions`, or `/edit/5` — typed directly, refreshed, or bookmarked — looks for an actual file at that path and 404s before Angular's router ever runs. `public/staticwebapp.config.json` fixes this with a `navigationFallback` rule that serves `index.html` for any unmatched route (excluding real static assets), letting the router take over. It's copied into the build output automatically since it lives under `public/` — verify with `ng build --configuration production` that it lands in `dist/Ledger.Client/browser/staticwebapp.config.json` if you ever restructure the project.
 
+**Security headers.** `public/staticwebapp.config.json` also sets `globalHeaders` for every response: a `Content-Security-Policy` (scripts from `'self'` only; `connect-src` allows `'self'` and the deployed API's origin; `frame-ancestors 'none'`), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, a restrictive `Permissions-Policy`, and `Strict-Transport-Security`. If the API's URL ever changes, update `connect-src` as well as `environment.prod.ts`, or the browser will block every API call.
+
 ## Known limitations
 
-- **Thin component test coverage.** `auth-interceptor.spec.ts` has real behavioral tests, but the component specs (`login`, `signup`, `transaction-form`, `transaction-list`, `header`) are still "should create" smoke tests — nothing yet checks form validation, the month filter, budgets, or `authGuard`. (They used to fail outright because the CLI template never provided the router/HTTP providers; that's fixed, and `ng test` now passes.)
+- **Thin component test coverage.** `ng test` runs 27 tests in 11 files and passes (the GitHub Actions workflow runs it before deploying). `auth-interceptor.spec.ts`, `forgot-password.spec.ts` and `reset-password.spec.ts` have real behavioral tests (HTTP calls, validation, error states, token handling), but the specs for `login`, `signup`, `transaction-form`, `transaction-list`, `header` and the app shell are still "should create"-style smoke tests — nothing yet checks the month filter, budgets, or `authGuard`.
+- **Signup and login still use `Validators.email` and a 6-character minimum.** The API requires 8, so a 6–7 character password passes the form and then gets a `400`; and an email with a trailing space is rejected by the form even though the API would trim it. The reset page uses the API's rules (8–128, `trimmedEmail`); signup and login haven't been brought in line.
 - **The 401 toast can stack with a component's own error toast.** When an expired session triggers the global 401 handling, the component that made the call may also show its own "Failed to …" toast.
 
 ## Roadmap
